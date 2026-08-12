@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Points de collecte — Vendanges 2026 — ICV</title>
+
+<!-- Polices -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+<!-- Leaflet (carte interactive) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+<style>
+  /* ============================================================
+     PALETTE / DESIGN TOKENS — modifier ici pour changer les couleurs
+     ============================================================ */
+  :root {
+    --ink: #2B2118;
+    --ink-soft: #6b5d4f;
+    --wine: #7A1F3D;
+    --wine-dark: #5A1530;
+    --gold: #B8862B;
+    --gold-soft: #E4C77A;
+    --leaf: #4B5842;
+    --paper: #F6F0E4;
+    --card: #FFFDF8;
+    --line: #E4D8C3;
+    --shadow: 0 1px 2px rgba(43,33,24,0.06), 0 8px 24px rgba(43,33,24,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    background-image:
+      radial-gradient(circle at 100% 0%, rgba(122,31,61,0.05) 0%, transparent 45%),
+      radial-gradient(circle at 0% 100%, rgba(184,134,43,0.06) 0%, transparent 40%);
+    color: var(--ink);
+    font-family: 'Work Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 80px; }
+
+  .header-logo {
+  position: Relative;
+  top: 0px;
+  left: 0px;
+  height: 70px;
+  width: auto;
+}
+
+  /* ---------- EN-TÊTE ---------- */
+  header.top { padding: 56px 24px 40px; text-align: center; position: relative; }
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--wine); font-weight: 600; margin-bottom: 14px;
+  }
+  h1 {
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: clamp(32px, 5vw, 52px);
+    line-height: 1.05; margin: 0 0 12px; color: var(--ink);
+  }
+  h1 em { color: var(--wine); font-style: italic; font-weight: 500; }
+  .sub { font-size: 16px; color: var(--ink-soft); max-width: 560px; margin: 0 auto; line-height: 1.55; }
+  .vine-rule { width: 72px; height: 3px; margin: 22px auto 0; background: linear-gradient(90deg, var(--gold), var(--wine)); border-radius: 3px; }
+
+  /* ---------- ONGLETS (jours + carte) ---------- */
+  .day-tabs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 40px 0 8px; }
+  .day-tab {
+    font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; letter-spacing: 0.03em;
+    padding: 11px 20px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--card);
+    color: var(--ink-soft); cursor: pointer; transition: all 0.18s ease; text-transform: capitalize;
+  }
+  .day-tab:hover { border-color: var(--gold); color: var(--ink); }
+  .day-tab.active { background: var(--wine); border-color: var(--wine); color: #fff; box-shadow: var(--shadow); }
+  .day-tab .count { opacity: 0.65; font-weight: 500; margin-left: 5px; }
+  .day-tab.map-tab { border-color: var(--leaf); }
+  .day-tab.map-tab.active { background: var(--leaf); border-color: var(--leaf); }
+
+  .helper-text { text-align: center; font-size: 13.5px; color: var(--ink-soft); margin: 18px 0 36px; }
+  .helper-text strong { color: var(--wine); }
+
+  /* ---------- FRISE (vue par jour) ---------- */
+  .timeline { position: relative; margin-top: 28px; }
+  .timeline::before {
+    content: ''; position: absolute; left: 68px; top: 8px; bottom: 8px; width: 2px;
+    background: repeating-linear-gradient(180deg, var(--gold-soft) 0, var(--gold-soft) 6px, transparent 6px, transparent 12px);
+  }
+  .stop { position: relative; display: grid; grid-template-columns: 68px 1fr; gap: 20px; margin-bottom: 18px; }
+  .stop-time {
+    font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: var(--wine-dark);
+    text-align: right; padding-top: 16px; position: relative;
+  }
+  .stop-time::after {
+    content: ''; position: absolute; right: -25px; top: 21px; width: 10px; height: 10px; border-radius: 50%;
+    background: var(--gold); border: 2px solid var(--paper); box-shadow: 0 0 0 2px var(--gold);
+  }
+  .stop-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 22px; box-shadow: var(--shadow); }
+  .stop-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+  .stop-commune { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; color: var(--ink); }
+  .stop-site { font-size: 13.5px; color: var(--wine); font-weight: 500; }
+  .stop-addr { font-size: 13px; color: var(--ink-soft); margin: 4px 0 10px; }
+  .stop-meta { display: flex; gap: 18px; flex-wrap: wrap; font-size: 13px; color: var(--ink-soft); border-top: 1px dashed var(--line); padding-top: 10px; margin-top: 10px; }
+  .stop-meta .label { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--leaf); display: block; margin-bottom: 2px; }
+  .stop-meta .col { flex: 1; min-width: 180px; }
+
+  /* ---------- GRILLE (vue "tous les points") ---------- */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 28px; }
+  .site-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; box-shadow: var(--shadow); }
+  .site-card .stop-commune { font-size: 18px; }
+  .site-card .stop-addr { margin-bottom: 12px; }
+  .day-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .day-badge {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; padding: 4px 9px;
+    border-radius: 999px; background: rgba(75,88,66,0.1); color: var(--leaf); text-transform: capitalize;
+  }
+  .day-badge b { color: var(--wine-dark); font-weight: 700; }
+
+  /* ---------- CARTE (vue "Carte") ---------- */
+  .map-toolbar { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 24px 0 16px; }
+  .map-filter {
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; padding: 7px 14px;
+    border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--ink-soft);
+    cursor: pointer; text-transform: capitalize;
+  }
+  .map-filter:hover { border-color: var(--leaf); }
+  .map-filter.active { background: var(--leaf); border-color: var(--leaf); color: #fff; }
+  .map-intro {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+    margin: 24px 0 12px;
+  }
+  .map-intro-title {
+    font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; color: var(--ink);
+  }
+  .map-intro-note { font-size: 12.5px; color: var(--ink-soft); }
+  #map-container {
+    height: 820px; width: 100%; max-width: 620px; margin: 0 auto;
+    border-radius: 14px; overflow: hidden; border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+  }
+  .map-table-wrap {
+    margin-top: 18px; background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; overflow: hidden; box-shadow: var(--shadow);
+  }
+  .map-table-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 12px 14px 9px; border-bottom: 1px solid var(--line); }
+  .map-table-title { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 600; color: var(--ink); }
+  .map-table-count { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--ink-soft); }
+  .map-table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+  }
+  .map-table th {
+    padding: 10px 14px; text-align: left; font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--leaf); background: rgba(75,88,66,0.06); border-bottom: 1px solid var(--line);
+  }
+  .map-table td {
+    padding: 9px 14px; border-bottom: 1px solid rgba(228,216,195,0.65); vertical-align: middle;
+  }
+  .map-table tbody tr:last-child td { border-bottom: 0; }
+  .map-table tbody tr:hover { background: rgba(122,31,61,0.035); }
+  .map-table .num {
+    width: 42px; font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: var(--wine);
+  }
+  .map-table .commune { font-weight: 600; color: var(--ink); white-space: nowrap; }
+  .map-table .site { color: var(--wine); font-weight: 500; }
+  .map-table .days { color: var(--ink-soft); }
+  .map-table .hours { color: var(--ink-soft); white-space: nowrap; }
+  .map-table .navette { font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: var(--wine-dark); white-space: nowrap; }
+  .map-number {
+    width: 28px; height: 28px; border-radius: 50%; background: var(--wine); color: #fff;
+    border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600;
+  }
+  .leaflet-popup-content-wrapper { border-radius: 10px; font-family: 'Work Sans', sans-serif; }
+  .popup-commune { font-family: 'Fraunces', serif; font-weight: 600; font-size: 15px; color: var(--ink); }
+  .popup-site { font-size: 12.5px; color: var(--wine); margin: 2px 0 4px; }
+  .popup-meta { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+  .popup-meta .label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; text-transform: uppercase; color: var(--leaf); }
+  .marker-pin {
+    width: 26px; height: 26px; border-radius: 50% 50% 50% 0; background: var(--wine);
+    transform: rotate(-45deg); border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35);
+  }
+
+  footer {
+    text-align: center; margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--line);
+    font-size: 12.5px; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace;
+  }
+
+  @media (max-width: 560px) {
+    .timeline::before { left: 52px; }
+    .stop { grid-template-columns: 52px 1fr; gap: 14px; }
+    .stop-time { font-size: 12px; }
+    .stop-time::after { right: -19px; }
+    #map-container { height: 620px; max-width: 100%; }
+    .map-intro { display: block; }
+    .map-intro-note { margin-top: 3px; }
+    .map-table th, .map-table td { padding: 8px 9px; }
+    .map-table th:nth-child(5), .map-table td:nth-child(5) { display: none; }
+    .map-table th, .map-table td { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+  <img src="Logo.jpg" alt="Logo Groupe ICV" class="header-logo">
+    <h2><em>ICV Rhône Sud</em></h2>
+    <h1>Points de collecte<br>Vendanges 2026</h1>
+    <p class="sub"> à partir du lundi 17 août 2026.</p>
+    <div class="vine-rule"></div>
+  </header>
+
+  <nav class="day-tabs" id="dayTabs"></nav>
+  <p class="helper-text" id="helperText">L'échantillon doit être déposé <strong>avant l'horaire de navette</strong> indiqué pour votre point de collecte.</p>
+
+  <div id="content"></div>
+
+  <footer>ICV Rhône Sud · Vendanges 2026</footer>
+</div>
+
+<script>
+/* ================================================================
+   DONNÉES — modifiez cette section pour ajouter/corriger un point
+   ================================================================
+   Structure :
+   - DATA.by_day.<jour> = liste des points ce jour-là, triée par
+     horaire de navette croissant. Chaque entrée : commune, site,
+     horaires (dépôt), navette (heure), lieu_depot, adresse, lat, lng.
+   - DATA.all_sites = liste unique de tous les points (un par site),
+     avec pour chacun la liste complète jours_navette (tableau de
+     {jours: [...], navette: "..."}).
+   Pour ajouter un point : dupliquez une entrée dans all_sites ET
+   dans chaque jour concerné de by_day, avec les mêmes coordonnées.
+   ================================================================ */
+const DATA = {
+  "by_day": {
+    "lundi": [
+      {
+        "commune": "Vaison",
+        "site": "Cave la Romaine",
+        "horaires": "8h-12h 13h30-17h",
+        "navette": "8h30",
+        "lieu_depot": "Côté quai de réception vendange, accès porte Service Technique la Romaine. Caisse à gauche en entrant ",
+        "adresse": "80 chemin de Saumelongue",
+        "lat": 44.2454,
+        "lng": 5.0717
+      },
+      {
+        "commune": "Villedieu",
+        "site": "Cave La Vigneronne",
+        "horaires": "8h-12h 14h-18h",
+        "navette": "8h45",
+        "lieu_depot": "S'adresser au caveau",
+        "adresse": "165 route de Buisson ",
+        "lat": 44.29,
+        "lng": 5.0333
+      },
+      {
+        "commune": "Valréas",
+        "site": "Bulles création",
+        "horaires": "8h30-12h 13h30-17h",
+        "navette": "9h00",
+        "lieu_depot": "Caisse à l'intérieur de l'entrepôt qui se trouve à gauche de l'accueil",
+        "adresse": "47 route du lac",
+        "lat": 44.3912,
+        "lng": 4.9993
+      },
+      {
+        "commune": "Cairanne",
+        "site": "Cave de Cairanne",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "9h15",
+        "lieu_depot": "Entrée côté chargement camion. Escalier en fer à gauche, 1er étage porte vitrée rouge à côté du groupe de froid. Echantillons à poser sur l'établi dans la cave.",
+        "adresse": "290 avenue de la Libération",
+        "lat": 44.2307,
+        "lng": 4.9281
+      },
+      {
+        "commune": "Séguret",
+        "site": "Cave les Vignerons",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "9h30",
+        "lieu_depot": "Porte entrée entre les 2 quais de réception - A droite devant le bureau",
+        "adresse": "1865 route de Vaison la Romaine",
+        "lat": 44.1784,
+        "lng": 5.0036
+      },
+      {
+        "commune": "Gigondas",
+        "site": "Domaine du Grappillon d'Or",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "10h05",
+        "lieu_depot": "Dans la cour intérieure à droite du caveau-- portail gris - caisse derrière le portail                                                                                         à l'intérieur",
+        "adresse": "617 route des Princes d'Orange",
+        "lat": 44.1664,
+        "lng": 4.9964
+      },
+      {
+        "commune": "Suze la Rousse",
+        "site": "Domaine le Plan",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "10h15",
+        "lieu_depot": "Caisse sous le hangar couvert (parking) derrière la cuve n°34 au fond contre le mur à côté du robinet d'eau. Sonnez si portail d'entrée fermé.",
+        "adresse": "100 chemin du grand bois",
+        "lat": 44.2771,
+        "lng": 4.8874
+      },
+      {
+        "commune": "Suze la Rousse",
+        "site": "Domaine la Bastide",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "10h25",
+        "lieu_depot": "Portail en face de l'entrée du domaine\néchantillons à déposer devant le quai de réception\n",
+        "adresse": "266 Rue de la glacière",
+        "lat": 44.2895,
+        "lng": 4.8429
+      },
+      {
+        "commune": "Rochegude",
+        "site": "Domaine le Gourget",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "10h40",
+        "lieu_depot": "Caisse dans le garage à gauche du quai de réception",
+        "adresse": "176 chemin le Gourget",
+        "lat": 44.2626,
+        "lng": 4.817
+      },
+      {
+        "commune": "Bonnieux",
+        "site": "Cave Coopérative",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "11h20",
+        "lieu_depot": "Accès petite porte verte à côté du mur en carreaux de verre. Caisse à gauche devant cuve inox avec pieds bleus ",
+        "adresse": "Place de la gare",
+        "lat": 43.8538,
+        "lng": 5.2762
+      },
+      {
+        "commune": "Bonnieux",
+        "site": "CAPL",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "11h25",
+        "lieu_depot": "Hangar CAPL - Caisse au fond de l'entrepôt à gauche du bureau",
+        "adresse": "Place de la gare",
+        "lat": 43.8535,
+        "lng": 5.2768
+      },
+      {
+        "commune": "Goult",
+        "site": "Cave de Lumière",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "11h30",
+        "lieu_depot": "Parking du haut accès par route de Joucas. Petite porte vitrée entre les 2 portails beiges. Caisse à droite à l'intérieur ",
+        "adresse": "19 route de Joucas",
+        "lat": 43.8606,
+        "lng": 5.233
+      },
+      {
+        "commune": "Maubec",
+        "site": "Coop d'Approvisionnement de Coustellet",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "11h45",
+        "lieu_depot": "Casier en extérieur sous l'abri",
+        "adresse": "325 route des caves",
+        "lat": 43.8666,
+        "lng": 5.1456
+      },
+      {
+        "commune": "Morières les Avignon",
+        "site": "Terres d'Avignon",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "12h15",
+        "lieu_depot": "Bâtiment bureaux - porte d'entrée à côté du platane - table à gauche en entrant",
+        "adresse": "457 avenue Aristide Briand",
+        "lat": 43.9392,
+        "lng": 4.909
+      }
+    ],
+    "mardi": [
+      {
+        "commune": "Vaison",
+        "site": "Cave la Romaine",
+        "horaires": "8h-12h 13h30-17h",
+        "navette": "8h15",
+        "lieu_depot": "Côté quai de réception vendange, accès porte Service Technique la Romaine. Caisse à gauche en entrant ",
+        "adresse": "80 chemin de Saumelongue",
+        "lat": 44.2454,
+        "lng": 5.0717
+      },
+      {
+        "commune": "Villes sur Auzon",
+        "site": "Terra Ventoux",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "8h30",
+        "lieu_depot": "Entrée porte bureaux. Caisse dans le SAS d'entrée",
+        "adresse": "253 route de Carpentras",
+        "lat": 44.0567,
+        "lng": 5.2266
+      },
+      {
+        "commune": "Bedoin",
+        "site": "Terre de Ghaya",
+        "horaires": "9h-12h 15h-18h",
+        "navette": "8h45",
+        "lieu_depot": "Caisse sous le auvent à l'entrée du caveau",
+        "adresse": "2203 route de Carpentras ",
+        "lat": 44.1052,
+        "lng": 5.1713
+      },
+      {
+        "commune": "Saint-Nazaire",
+        "site": "Domaine Les Deux Cols",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "9h00",
+        "lieu_depot": "Informations à venir",
+        "adresse": "62 Chemin du Bresquet",
+        "lat": 44.1974,
+        "lng": 4.6272
+      },
+      {
+        "commune": "Mazan",
+        "site": "Vignerons de Canteperdrix",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "9h35",
+        "lieu_depot": "1er portail, côté route de Caromb à droite de la citerne antargaz qui se trouve dehors. Caisse devant la cuve n°48. Si porte garage beige fermée, entrer par les bureaux puisà gauche après porte vitrée chai",
+        "adresse": "890 La Venue de Caromb",
+        "lat": 44.0662,
+        "lng": 5.1285
+      },
+      {
+        "commune": "Chateauneuf du Pape",
+        "site": "Le Clos du Caillou",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "10h05",
+        "lieu_depot": "Caisse dans le labo de la cave",
+        "adresse": "1600 chemin de Saint Dominique",
+        "lat": 44.0841,
+        "lng": 4.8568
+      },
+      {
+        "commune": "Allan",
+        "site": "Château Bizard",
+        "horaires": "8h30-12h 14h-17h",
+        "navette": "11H15",
+        "lieu_depot": "Se présenter à l'accueil",
+        "adresse": "460 chemin de Bizard",
+        "lat": 44.4765,
+        "lng": 4.7857
+      },
+      {
+        "commune": "Bonnieux",
+        "site": "Cave Coopérative",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "11h20",
+        "lieu_depot": "Accès petite porte verte à côté du mur en carreaux de verre. Caisse à gauche devant cuve inox avec pieds bleus ",
+        "adresse": "Place de la gare",
+        "lat": 43.8538,
+        "lng": 5.2762
+      },
+      {
+        "commune": "Bonnieux",
+        "site": "CAPL",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "11h25",
+        "lieu_depot": "Hangar CAPL - Caisse au fond de l'entrepôt à gauche du bureau",
+        "adresse": "Place de la gare",
+        "lat": 43.8535,
+        "lng": 5.2768
+      },
+      {
+        "commune": "Goult",
+        "site": "Cave de Lumière",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "11h30",
+        "lieu_depot": "Parking du haut accès par route de Joucas. Petite porte vitrée entre les 2 portails beiges. Caisse à droite à l'intérieur ",
+        "adresse": "19 route de Joucas",
+        "lat": 43.8606,
+        "lng": 5.233
+      },
+      {
+        "commune": "Maubec",
+        "site": "Coop d'Approvisionnement de Coustellet",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "11h45",
+        "lieu_depot": "Casier en extérieur sous l'abri",
+        "adresse": "325 route des caves",
+        "lat": 43.8666,
+        "lng": 5.1456
+      },
+      {
+        "commune": "Valaurie",
+        "site": "Domaine Rozel",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "11h45",
+        "lieu_depot": "Caisse devant l'entrepôt sur le parking (en face le caveau de l'autre côté de la route)",
+        "adresse": "220 route de Montélimar",
+        "lat": 44.4161,
+        "lng": 4.9076
+      },
+      {
+        "commune": "Suze la Rousse",
+        "site": "Domaine la Bastide",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "12h25",
+        "lieu_depot": "Portail en face de l'entrée du domaine\néchantillons à déposer devant le quai de réception\n",
+        "adresse": "266 Rue de la glacière",
+        "lat": 44.2895,
+        "lng": 4.8429
+      }
+    ],
+    "mercredi": [
+      {
+        "commune": "Vaison",
+        "site": "Cave la Romaine",
+        "horaires": "8h-12h 13h30-17h",
+        "navette": "8h30",
+        "lieu_depot": "Côté quai de réception vendange, accès porte Service Technique la Romaine. Caisse à gauche en entrant ",
+        "adresse": "80 chemin de Saumelongue",
+        "lat": 44.2454,
+        "lng": 5.0717
+      },
+      {
+        "commune": "Villedieu",
+        "site": "Cave La Vigneronne",
+        "horaires": "8h-12h 14h-18h",
+        "navette": "8h45",
+        "lieu_depot": "S'adresser au caveau",
+        "adresse": "165 route de Buisson ",
+        "lat": 44.29,
+        "lng": 5.0333
+      },
+      {
+        "commune": "Valréas",
+        "site": "Bulles création",
+        "horaires": "8h30-12h 13h30-17h",
+        "navette": "9h00",
+        "lieu_depot": "Caisse à l'intérieur de l'entrepôt qui se trouve à gauche de l'accueil",
+        "adresse": "47 route du lac",
+        "lat": 44.3912,
+        "lng": 4.9993
+      },
+      {
+        "commune": "Cairanne",
+        "site": "Cave de Cairanne",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "9h15",
+        "lieu_depot": "Entrée côté chargement camion. Escalier en fer à gauche, 1er étage porte vitrée rouge à côté du groupe de froid. Echantillons à poser sur l'établi dans la cave.",
+        "adresse": "290 avenue de la Libération",
+        "lat": 44.2307,
+        "lng": 4.9281
+      },
+      {
+        "commune": "Séguret",
+        "site": "Cave les Vignerons",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "9h30",
+        "lieu_depot": "Porte entrée entre les 2 quais de réception - A droite devant le bureau",
+        "adresse": "1865 route de Vaison la Romaine",
+        "lat": 44.1784,
+        "lng": 5.0036
+      },
+      {
+        "commune": "Gigondas",
+        "site": "Domaine du Grappillon d'Or",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "10h05",
+        "lieu_depot": "Dans la cour intérieure à droite du caveau-- portail gris - caisse derrière le portail                                                                                         à l'intérieur",
+        "adresse": "617 route des Princes d'Orange",
+        "lat": 44.1664,
+        "lng": 4.9964
+      },
+      {
+        "commune": "Suze la Rousse",
+        "site": "Domaine le Plan",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "10h15",
+        "lieu_depot": "Caisse sous le hangar couvert (parking) derrière la cuve n°34 au fond contre le mur à côté du robinet d'eau. Sonnez si portail d'entrée fermé.",
+        "adresse": "100 chemin du grand bois",
+        "lat": 44.2771,
+        "lng": 4.8874
+      },
+      {
+        "commune": "Suze la Rousse",
+        "site": "Domaine la Bastide",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "10h25",
+        "lieu_depot": "Portail en face de l'entrée du domaine\néchantillons à déposer devant le quai de réception\n",
+        "adresse": "266 Rue de la glacière",
+        "lat": 44.2895,
+        "lng": 4.8429
+      },
+      {
+        "commune": "Rochegude",
+        "site": "Domaine le Gourget",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "10h40",
+        "lieu_depot": "Caisse dans le garage à gauche du quai de réception",
+        "adresse": "176 chemin le Gourget",
+        "lat": 44.2626,
+        "lng": 4.817
+      },
+      {
+        "commune": "Bonnieux",
+        "site": "Cave Coopérative",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "11h20",
+        "lieu_depot": "Accès petite porte verte à côté du mur en carreaux de verre. Caisse à gauche devant cuve inox avec pieds bleus ",
+        "adresse": "Place de la gare",
+        "lat": 43.8538,
+        "lng": 5.2762
+      },
+      {
+        "commune": "Bonnieux",
+        "site": "CAPL",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "11h25",
+        "lieu_depot": "Hangar CAPL - Caisse au fond de l'entrepôt à gauche du bureau",
+        "adresse": "Place de la gare",
+        "lat": 43.8535,
+        "lng": 5.2768
+      },
+      {
+        "commune": "Goult",
+        "site": "Cave de Lumière",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "11h30",
+        "lieu_depot": "Parking du haut accès par route de Joucas. Petite porte vitrée entre les 2 portails beiges. Caisse à droite à l'intérieur ",
+        "adresse": "19 route de Joucas",
+        "lat": 43.8606,
+        "lng": 5.233
+      },
+      {
+        "commune": "Maubec",
+        "site": "Coop d'Approvisionnement de Coustellet",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "11h45",
+        "lieu_depot": "Casier en extérieur sous l'abri",
+        "adresse": "325 route des caves",
+        "lat": 43.8666,
+        "lng": 5.1456
+      },
+      {
+        "commune": "Morières les Avignon",
+        "site": "Terres d'Avignon",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "12h15",
+        "lieu_depot": "Bâtiment bureaux - porte d'entrée à côté du platane - table à gauche en entrant",
+        "adresse": "457 avenue Aristide Briand",
+        "lat": 43.9392,
+        "lng": 4.909
+      }
+    ],
+    "jeudi": [
+      {
+        "commune": "Vaison",
+        "site": "Cave la Romaine",
+        "horaires": "8h-12h 13h30-17h",
+        "navette": "8h15",
+        "lieu_depot": "Côté quai de réception vendange, accès porte Service Technique la Romaine. Caisse à gauche en entrant ",
+        "adresse": "80 chemin de Saumelongue",
+        "lat": 44.2454,
+        "lng": 5.0717
+      },
+      {
+        "commune": "Villes sur Auzon",
+        "site": "Terra Ventoux",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "8h30",
+        "lieu_depot": "Entrée porte bureaux. Caisse dans le SAS d'entrée",
+        "adresse": "253 route de Carpentras",
+        "lat": 44.0567,
+        "lng": 5.2266
+      },
+      {
+        "commune": "Bedoin",
+        "site": "Terre de Ghaya",
+        "horaires": "9h-12h 15h-18h",
+        "navette": "8h45",
+        "lieu_depot": "Caisse sous le auvent à l'entrée du caveau",
+        "adresse": "2203 route de Carpentras ",
+        "lat": 44.1052,
+        "lng": 5.1713
+      },
+      {
+        "commune": "Saint-Nazaire",
+        "site": "Domaine Les Deux Cols",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "9h00",
+        "lieu_depot": "Informations à venir",
+        "adresse": "62 Chemin du Bresquet",
+        "lat": 44.1974,
+        "lng": 4.6272
+      },
+      {
+        "commune": "Mazan",
+        "site": "Vignerons de Canteperdrix",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "9h35",
+        "lieu_depot": "1er portail, côté route de Caromb à droite de la citerne antargaz qui se trouve dehors. Caisse devant la cuve n°48. Si porte garage beige fermée, entrer par les bureaux puisà gauche après porte vitrée chai",
+        "adresse": "890 La Venue de Caromb",
+        "lat": 44.0662,
+        "lng": 5.1285
+      },
+      {
+        "commune": "Chateauneuf du Pape",
+        "site": "Le Clos du Caillou",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "10h05",
+        "lieu_depot": "Caisse dans le labo de la cave",
+        "adresse": "1600 chemin de Saint Dominique",
+        "lat": 44.0841,
+        "lng": 4.8568
+      },
+      {
+        "commune": "Allan",
+        "site": "Château Bizard",
+        "horaires": "8h30-12h 14h-17h",
+        "navette": "11H15",
+        "lieu_depot": "Se présenter à l'accueil",
+        "adresse": "460 chemin de Bizard",
+        "lat": 44.4765,
+        "lng": 4.7857
+      },
+      {
+        "commune": "Bonnieux",
+        "site": "Cave Coopérative",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "11h20",
+        "lieu_depot": "Accès petite porte verte à côté du mur en carreaux de verre. Caisse à gauche devant cuve inox avec pieds bleus ",
+        "adresse": "Place de la gare",
+        "lat": 43.8538,
+        "lng": 5.2762
+      },
+      {
+        "commune": "Bonnieux",
+        "site": "CAPL",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "11h25",
+        "lieu_depot": "Hangar CAPL - Caisse au fond de l'entrepôt à gauche du bureau",
+        "adresse": "Place de la gare",
+        "lat": 43.8535,
+        "lng": 5.2768
+      },
+      {
+        "commune": "Goult",
+        "site": "Cave de Lumière",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "11h30",
+        "lieu_depot": "Parking du haut accès par route de Joucas. Petite porte vitrée entre les 2 portails beiges. Caisse à droite à l'intérieur ",
+        "adresse": "19 route de Joucas",
+        "lat": 43.8606,
+        "lng": 5.233
+      },
+      {
+        "commune": "Maubec",
+        "site": "Coop d'Approvisionnement de Coustellet",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "11h45",
+        "lieu_depot": "Casier en extérieur sous l'abri",
+        "adresse": "325 route des caves",
+        "lat": 43.8666,
+        "lng": 5.1456
+      },
+      {
+        "commune": "Valaurie",
+        "site": "Domaine Rozel",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "11h45",
+        "lieu_depot": "Caisse devant l'entrepôt sur le parking (en face le caveau de l'autre côté de la route)",
+        "adresse": "220 route de Montélimar",
+        "lat": 44.4161,
+        "lng": 4.9076
+      },
+      {
+        "commune": "Suze la Rousse",
+        "site": "Domaine la Bastide",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "12h25",
+        "lieu_depot": "Portail en face de l'entrée du domaine\néchantillons à déposer devant le quai de réception\n",
+        "adresse": "266 Rue de la glacière",
+        "lat": 44.2895,
+        "lng": 4.8429
+      },
+    ],
+    "vendredi": [
+      {
+        "commune": "Vaison",
+        "site": "Cave la Romaine",
+        "horaires": "8h-12h 13h30-17h",
+        "navette": "8h30",
+        "lieu_depot": "Côté quai de réception vendange, accès porte Service Technique la Romaine. Caisse à gauche en entrant ",
+        "adresse": "80 chemin de Saumelongue",
+        "lat": 44.2454,
+        "lng": 5.0717
+      },
+      {
+        "commune": "Villedieu",
+        "site": "Cave La Vigneronne",
+        "horaires": "8h-12h 14h-18h",
+        "navette": "8h45",
+        "lieu_depot": "S'adresser au caveau",
+        "adresse": "165 route de Buisson ",
+        "lat": 44.29,
+        "lng": 5.0333
+      },
+      {
+        "commune": "Valréas",
+        "site": "Bulles création",
+        "horaires": "8h30-12h 13h30-17h",
+        "navette": "9h00",
+        "lieu_depot": "Caisse à l'intérieur de l'entrepôt qui se trouve à gauche de l'accueil",
+        "adresse": "47 route du lac",
+        "lat": 44.3912,
+        "lng": 4.9993
+      },
+      {
+        "commune": "Cairanne",
+        "site": "Cave de Cairanne",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "9h15",
+        "lieu_depot": "Entrée côté chargement camion. Escalier en fer à gauche, 1er étage porte vitrée rouge à côté du groupe de froid. Echantillons à poser sur l'établi dans la cave.",
+        "adresse": "290 avenue de la Libération",
+        "lat": 44.2307,
+        "lng": 4.9281
+      },
+      {
+        "commune": "Séguret",
+        "site": "Cave les Vignerons",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "9h30",
+        "lieu_depot": "Porte entrée entre les 2 quais de réception - A droite devant le bureau",
+        "adresse": "1865 route de Vaison la Romaine",
+        "lat": 44.1784,
+        "lng": 5.0036
+      },
+      {
+        "commune": "Gigondas",
+        "site": "Domaine du Grappillon d'Or",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "10h05",
+        "lieu_depot": "Dans la cour intérieure à droite du caveau-- portail gris - caisse derrière le portail                                                                                         à l'intérieur",
+        "adresse": "617 route des Princes d'Orange",
+        "lat": 44.1664,
+        "lng": 4.9964
+      },
+      {
+        "commune": "Suze la Rousse",
+        "site": "Domaine le Plan",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "10h15",
+        "lieu_depot": "Caisse sous le hangar couvert (parking) derrière la cuve n°34 au fond contre le mur à côté du robinet d'eau. Sonnez si portail d'entrée fermé.",
+        "adresse": "100 chemin du grand bois",
+        "lat": 44.2771,
+        "lng": 4.8874
+      },
+      {
+        "commune": "Suze la Rousse",
+        "site": "Domaine la Bastide",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "10h25",
+        "lieu_depot": "Portail en face de l'entrée du domaine\néchantillons à déposer devant le quai de réception\n",
+        "adresse": "266 Rue de la glacière",
+        "lat": 44.2895,
+        "lng": 4.8429
+      },
+      {
+        "commune": "Rochegude",
+        "site": "Domaine le Gourget",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "10h40",
+        "lieu_depot": "Caisse dans le garage à gauche du quai de réception",
+        "adresse": "176 chemin le Gourget",
+        "lat": 44.2626,
+        "lng": 4.817
+      },
+      {
+        "commune": "Bonnieux",
+        "site": "Cave Coopérative",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "11h20",
+        "lieu_depot": "Accès petite porte verte à côté du mur en carreaux de verre. Caisse à gauche devant cuve inox avec pieds bleus ",
+        "adresse": "Place de la gare",
+        "lat": 43.8538,
+        "lng": 5.2762
+      },
+      {
+        "commune": "Bonnieux",
+        "site": "CAPL",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "11h25",
+        "lieu_depot": "Hangar CAPL - Caisse au fond de l'entrepôt à gauche du bureau",
+        "adresse": "Place de la gare",
+        "lat": 43.8535,
+        "lng": 5.2768
+      },
+      {
+        "commune": "Goult",
+        "site": "Cave de Lumière",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "11h30",
+        "lieu_depot": "Parking du haut accès par route de Joucas. Petite porte vitrée entre les 2 portails beiges. Caisse à droite à l'intérieur ",
+        "adresse": "19 route de Joucas",
+        "lat": 43.8606,
+        "lng": 5.233
+      },
+      {
+        "commune": "Maubec",
+        "site": "Coop d'Approvisionnement de Coustellet",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "11h45",
+        "lieu_depot": "Casier en extérieur sous l'abri",
+        "adresse": "325 route des caves",
+        "lat": 43.8666,
+        "lng": 5.1456
+      },
+      {
+        "commune": "Morières les Avignon",
+        "site": "Terres d'Avignon",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "12h15",
+        "lieu_depot": "Bâtiment bureaux - porte d'entrée à côté du platane - table à gauche en entrant",
+        "adresse": "457 avenue Aristide Briand",
+        "lat": 43.9392,
+        "lng": 4.909
+      },
+      {
+        "commune": "Bedoin",
+        "site": "Terre de Ghaya",
+        "horaires": "9h-12h 15h-18h",
+        "navette": "13h20",
+        "lieu_depot": "Caisse sous le auvent à l'entrée du caveau",
+        "adresse": "2203 route de Carpentras ",
+        "lat": 44.1052,
+        "lng": 5.1713
+      },
+      {
+        "commune": "Villes sur Auzon",
+        "site": "Terra Ventoux",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "13h35",
+        "lieu_depot": "Entrée porte bureaux. Caisse dans le SAS d'entrée",
+        "adresse": "253 route de Carpentras",
+        "lat": 44.0567,
+        "lng": 5.2266
+      },
+      {
+        "commune": "Mazan",
+        "site": "Vignerons de Canteperdrix",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "13h45",
+        "lieu_depot": "1er portail, côté route de Caromb à droite de la citerne antargaz qui se trouve dehors. Caisse devant la cuve n°48. Si porte garage beige fermée, entrer par les bureaux puisà gauche après porte vitrée chai",
+        "adresse": "890 La Venue de Caromb",
+        "lat": 44.0662,
+        "lng": 5.1285
+      }
+    ]
+  },
+  "all_sites": [
+    {
+      "commune": "Allan",
+      "site": "Château Bizard",
+      "horaires": "8h30-12h 14h-17h",
+      "lieu_depot": "Se présenter à l'accueil",
+      "adresse": "460 chemin de Bizard",
+      "jours_navette": [
+        {
+          "jours": [
+            "mardi",
+            "jeudi"
+          ],
+          "navette": "11H15"
+        }
+      ],
+      "lat": 44.4765,
+      "lng": 4.7857
+    },
+    {
+      "commune": "Bedoin",
+      "site": "Terre de Ghaya",
+      "horaires": "9h-12h 15h-18h",
+      "lieu_depot": "Caisse sous le auvent à l'entrée du caveau",
+      "adresse": "2203 route de Carpentras ",
+      "jours_navette": [
+        {
+          "jours": [
+            "mardi",
+            "jeudi"
+          ],
+          "navette": "8h45"
+        },
+        {
+          "jours": [
+            "vendredi"
+          ],
+          "navette": "13h20"
+        }
+      ],
+      "lat": 44.1052,
+      "lng": 5.1713
+    },
+    {
+      "commune": "Bonnieux",
+      "site": "Cave Coopérative",
+      "horaires": "8h-12h 14h-17h",
+      "lieu_depot": "Accès petite porte verte à côté du mur en carreaux de verre. Caisse à gauche devant cuve inox avec pieds bleus ",
+      "adresse": "Place de la gare",
+      "jours_navette": [
+        {
+          "jours": [
+            "lundi",
+            "mardi",
+            "mercredi",
+            "jeudi",
+            "vendredi"
+          ],
+          "navette": "11h20"
+        }
+      ],
+      "lat": 43.8538,
+      "lng": 5.2762
+    },
+    {
+      "commune": "Bonnieux",
+      "site": "CAPL",
+      "horaires": "8h-12h 14h-17h",
+      "lieu_depot": "Hangar CAPL - Caisse au fond de l'entrepôt à gauche du bureau",
+      "adresse": "Place de la gare",
+      "jours_navette": [
+        {
+          "jours": [
+            "lundi",
+            "mardi",
+            "mercredi",
+            "jeudi",
+            "vendredi"
+          ],
+          "navette": "11h25"
+        }
+      ],
+      "lat": 43.8535,
+      "lng": 5.2768
+    },
+    {
+      "commune": "Cairanne",
+      "site": "Cave de Cairanne",
+      "horaires": "8h-12h 14h-17h",
+      "lieu_depot": "Entrée côté chargement camion. Escalier en fer à gauche, 1er étage porte vitrée rouge à côté du groupe de froid. Echantillons à poser sur l'établi dans la cave.",
+      "adresse": "290 avenue de la Libération",
+      "jours_navette": [
+        {
+          "jours": [
+            "lundi",
+            "mercredi",
+            "vendredi"
+          ],
+          "navette": "9h15"
+        }
+      ],
+      "lat": 44.2307,
+      "lng": 4.9281
+    },
+    {
+      "commune": "Chateauneuf du Pape",
+      "site": "Le Clos du Caillou",
+      "horaires": "9h-12h 14h-17h",
+      "lieu_depot": "Caisse dans le labo de la cave",
+      "adresse": "1600 chemin de Saint Dominique",
+      "jours_navette": [
+        {
+          "jours": [
+            "mardi",
+            "jeudi"
+          ],
+          "navette": "10h05"
+        }
+      ],
+      "lat": 44.0841,
+      "lng": 4.8568
+    },
+    {
+      "commune": "Gigondas",
+      "site": "Domaine du Grappillon d'Or",
+      "horaires": "8h-12h 14h-17h",
+      "lieu_depot": "Dans la cour intérieure à droite du caveau-- portail gris - caisse derrière le portail                                                                                         à l'intérieur",
+      "adresse": "617 route des Princes d'Orange",
+      "jours_navette": [
+        {
+          "jours": [
+            "lundi",
+            "mercredi",
+            "vendredi"
+          ],
+          "navette": "10h05"
+        }
+      ],
+      "lat": 44.1664,
+      "lng": 4.9964
+    },
+    {
+      "commune": "Goult",
+      "site": "Cave de Lumière",
+      "horaires": "8h-12h 14h-17h",
+      "lieu_depot": "Parking du haut accès par route de Joucas. Petite porte vitrée entre les 2 portails beiges. Caisse à droite à l'intérieur ",
+      "adresse": "19 route de Joucas",
+      "jours_navette": [
+        {
+          "jours": [
+            "lundi",
+            "mardi",
+            "mercredi",
+            "jeudi",
+            "vendredi"
+          ],
+          "navette": "11h30"
+        }
+      ],
+      "lat": 43.8606,
+      "lng": 5.233
+    },
+    {
+      "commune": "Maubec",
+      "site": "Coop d'Approvisionnement de Coustellet",
+      "horaires": "8h-12h 14h-17h",
+      "lieu_depot": "Casier en extérieur sous l'abri",
+      "adresse": "325 route des caves",
+      "jours_navette": [
+        {
+          "jours": [
+            "lundi",
+            "mardi",
+            "mercredi",
+            "jeudi",
+            "vendredi"
+          ],
+          "navette": "11h45"
+        }
+      ],
+      "lat": 43.8666,
+      "lng": 5.1456
+    },
+    {
+      "commune": "Mazan",
+      "site": "Vignerons de Canteperdrix",
+      "horaires": "8h-12h 14h-17h",
+      "lieu_depot": "1er portail, côté route de Caromb à droite de la citerne antargaz qui se trouve dehors. Caisse devant la cuve n°48. Si porte garage beige fermée, entrer par les bureaux puisà gauche après porte vitrée chai",
+      "adresse": "890 La Venue de Caromb",
+      "jours_navette": [
+        {
+          "jours": [
+            "mardi"
+          ],
+          "navette": "9h35"
+        },
+        {
+          "jours": [
+            "jeudi"
+          ],
+          "navette": "9h35"
+        },
+        {
+          "jours": [
+            "vendredi"
+          ],
+          "navette": "13h45"
+        }
+      ],
+      "lat": 44.0662,
+      "lng": 5.1285
+    },
+    {
+      "commune": "Morières les Avignon",
+      "site": "Terres d'Avignon",
+      "horaires": "9h-12h 14h-17h",
+      "lieu_depot": "Bâtiment bureaux - porte d'entrée à côté du platane - table à gauche en entrant",
+      "adresse": "457 avenue Aristide Briand",
+      "jours_navette": [
+        {
+          "jours": [
+            "lundi",
+            "mercredi",
+            "vendredi"
+          ],
+          "navette": "12h15"
+        }
+      ],
+      "lat": 43.9392,
+      "lng": 4.909
+    },
+    {
+      "commune": "Rochegude",
+      "site": "Domaine le Gourget",
+      "horaires": "9h-12h 14h-17h",
+      "lieu_depot": "Caisse dans le garage à gauche du quai de réception",
+      "adresse": "176 chemin le Gourget",
+      "jours_navette": [
+        {
+          "jours": [
+            "lundi",
+            "mercredi",
+            "vendredi"
+          ],
+          "navette": "10h40"
+        }
+      ],
+      "lat": 44.2626,
+      "lng": 4.817
+    },
+    {
+      "commune": "Saint-Nazaire",
+      "site": "Domaine Les Deux Cols",
+      "horaires": "9h-12h 14h-17h",
+      "lieu_depot": "Informations à venir",
+      "adresse": "62 Chemin du Bresquet",
+      "jours_navette": [
+        {
+          "jours": [
+            "mardi",
+            "jeudi"
+          ],
+          "navette": "9h00"
+        }
+      ],
+      "lat": 44.1974,
+      "lng": 4.6272
+    },
+    {
+      "commune": "Suze la Rousse",
+      "site": "Domaine le Plan",
+      "horaires": "9h-12h 14h-17h",
+      "lieu_depot": "Caisse sous le hangar couvert (parking) derrière la cuve n°34 au fond contre le mur à côté du robinet d'eau. Sonnez si portail d'entrée fermé.",
+      "adresse": "100 chemin du grand bois",
+      "jours_navette": [
+        {
+          "jours": [
+            "lundi",
+            "mercredi",
+            "vendredi"
+          ],
+          "navette": "10h15"
+        }
+      ],
+      "lat": 44.2771,
+      "lng": 4.8874
+    },
+    {
+      "commune": "Suze la Rousse",
+      "site": "Domaine la Bastide",
+      "horaires": "9h-12h 14h-17h",
+      "lieu_depot": "Portail en face de l'entrée du domaine\néchantillons à déposer devant le quai de réception\n",
+      "adresse": "266 Rue de la glacière",
+      "jours_navette": [
+        {
+          "jours": [
+            "lundi",
+            "mercredi",
+            "vendredi"
+          ],
+          "navette": "10h25"
+        },
+        {
+          "jours": [
+            "mardi",
+            "jeudi"
+          ],
+          "navette": "12h25"
+        }
+      ],
+      "lat": 44.2895,
+      "lng": 4.8429
+    },
+    {
+      "commune": "Séguret",
+      "site": "Cave les Vignerons",
+      "horaires": "8h-12h 14h-17h",
+      "lieu_depot": "Porte entrée entre les 2 quais de réception - A droite devant le bureau",
+      "adresse": "1865 route de Vaison la Romaine",
+      "jours_navette": [
+        {
+          "jours": [
+            "lundi",
+            "mercredi",
+            "vendredi"
+          ],
+          "navette": "9h30"
+        }
+      ],
+      "lat": 44.1784,
+      "lng": 5.0036
+    },
+    {
+      "commune": "Vaison",
+      "site": "Cave la Romaine",
+      "horaires": "8h-12h 13h30-17h",
+      "lieu_depot": "Côté quai de réception vendange, accès porte Service Technique la Romaine. Caisse à gauche en entrant ",
+      "adresse": "80 chemin de Saumelongue",
+      "jours_navette": [
+        {
+          "jours": [
+            "mardi",
+            "jeudi"
+          ],
+          "navette": "8h15"
+        },
+        {
+          "jours": [
+            "lundi",
+            "mercredi",
+            "vendredi"
+          ],
+          "navette": "8h30"
+        }
+      ],
+      "lat": 44.2454,
+      "lng": 5.0717
+    },
+    {
+      "commune": "Valaurie",
+      "site": "Domaine Rozel",
+      "horaires": "9h-12h 14h-17h",
+      "lieu_depot": "Caisse devant l'entrepôt sur le parking (en face le caveau de l'autre côté de la route)",
+      "adresse": "220 route de Montélimar",
+      "jours_navette": [
+        {
+          "jours": [
+            "mardi",
+            "jeudi"
+          ],
+          "navette": "11h45"
+        }
+      ],
+      "lat": 44.4161,
+      "lng": 4.9076
+    },
+    {
+      "commune": "Valréas",
+      "site": "Bulles création",
+      "horaires": "8h30-12h 13h30-17h",
+      "lieu_depot": "Caisse à l'intérieur de l'entrepôt qui se trouve à gauche de l'accueil",
+      "adresse": "47 route du lac",
+      "jours_navette": [
+        {
+          "jours": [
+            "lundi",
+            "mercredi",
+            "vendredi"
+          ],
+          "navette": "9h00"
+        }
+      ],
+      "lat": 44.3912,
+      "lng": 4.9993
+    },
+    {
+      "commune": "Villedieu",
+      "site": "Cave La Vigneronne",
+      "horaires": "8h-12h 14h-18h",
+      "lieu_depot": "S'adresser au caveau",
+      "adresse": "165 route de Buisson ",
+      "jours_navette": [
+        {
+          "jours": [
+            "lundi",
+            "mercredi",
+            "vendredi"
+          ],
+          "navette": "8h45"
+        }
+      ],
+      "lat": 44.29,
+      "lng": 5.0333
+    },
+    {
+      "commune": "Villes sur Auzon",
+      "site": "Terra Ventoux",
+      "horaires": "8h-12h 14h-17h",
+      "lieu_depot": "Entrée porte bureaux. Caisse dans le SAS d'entrée",
+      "adresse": "253 route de Carpentras",
+      "jours_navette": [
+        {
+          "jours": [
+            "mardi",
+            "jeudi"
+          ],
+          "navette": "8h30"
+        },
+        {
+          "jours": [
+            "vendredi"
+          ],
+          "navette": "13h35"
+        }
+      ],
+      "lat": 44.0567,
+      "lng": 5.2266
+    }
+  ]
+};
+
+const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi'];
+let current = 'carte'; // vue affichée au chargement : 'carte' | 'tous' | 'lundi'...
+let mapInstance = null;
+let mapMarkers = [];
+let mapDayFilter = 'tous';
+
+/* ---------------- Onglets ---------------- */
+function renderTabs() {
+  const tabs = document.getElementById('dayTabs');
+  tabs.innerHTML = '';
+
+  const mapBtn = document.createElement('button');
+  mapBtn.className = 'day-tab map-tab' + (current === 'carte' ? ' active' : '');
+  mapBtn.textContent = '🗺 Carte';
+  mapBtn.onclick = () => { current = 'carte'; render(); };
+  tabs.appendChild(mapBtn);
+
+  const allBtn = document.createElement('button');
+  allBtn.className = 'day-tab' + (current === 'tous' ? ' active' : '');
+  allBtn.innerHTML = 'Tous les points';
+  allBtn.onclick = () => { current = 'tous'; render(); };
+  tabs.appendChild(allBtn);
+
+  DAYS.forEach(d => {
+    const btn = document.createElement('button');
+    btn.className = 'day-tab' + (current === d ? ' active' : '');
+    btn.innerHTML = d ;
+    btn.onclick = () => { current = d; render(); };
+    tabs.appendChild(btn);
+  });
+}
+
+/* ---------------- Vue "par jour" (frise chronologique) ---------------- */
+function renderDayView(day) {
+  const stops = DATA.by_day[day];
+  const el = document.createElement('div');
+  el.className = 'timeline';
+  stops.forEach(s => {
+    const stop = document.createElement('div');
+    stop.className = 'stop';
+    stop.innerHTML = `
+      <div class="stop-time">${s.navette || '—'}</div>
+      <div class="stop-card">
+        <div class="stop-head">
+          <span class="stop-commune">${s.commune}</span>
+          <span class="stop-site">${s.site}</span>
+        </div>
+        <div class="stop-addr">${s.adresse || ''}</div>
+        <div class="stop-meta">
+          <div class="col"><span class="label">Horaires de dépôt</span>${s.horaires || '—'}</div>
+          <div class="col"><span class="label">Lieu de dépôt</span>${s.lieu_depot || '—'}</div>
+        </div>
+      </div>`;
+    el.appendChild(stop);
+  });
+  return el;
+}
+
+/* ---------------- Vue "tous les points" (grille de fiches) ---------------- */
+function renderAllView() {
+  const el = document.createElement('div');
+  el.className = 'grid';
+  DATA.all_sites.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'site-card';
+    const badges = s.jours_navette.map(jn =>
+      jn.jours.map(j => `<span class="day-badge">${j} <b>${jn.navette || ''}</b></span>`).join('')
+    ).join('');
+    card.innerHTML = `
+      <div class="stop-head">
+        <span class="stop-commune">${s.commune}</span>
+      </div>
+      <div class="stop-site" style="margin-bottom:4px;">${s.site}</div>
+      <div class="stop-addr">${s.adresse || ''}</div>
+      <div class="stop-meta">
+        <div class="col"><span class="label">Horaires de dépôt</span>${s.horaires || '—'}</div>
+        <div class="col"><span class="label">Lieu de dépôt</span>${s.lieu_depot || '—'}</div>
+      </div>
+      <div class="day-badges">${badges}</div>`;
+    el.appendChild(card);
+  });
+  return el;
+}
+
+/* ---------------- Vue "Carte" (Leaflet, focus vallée du Rhône) ---------------- */
+function renderMapView() {
+  const el = document.createElement('div');
+
+  const toolbar = document.createElement('div');
+  toolbar.className = 'map-toolbar';
+  const filters = ['tous', ...DAYS];
+  filters.forEach(f => {
+    const btn = document.createElement('button');
+    btn.className = 'map-filter' + (mapDayFilter === f ? ' active' : '');
+    btn.textContent = f === 'tous' ? 'Tous les jours' : f;
+    btn.onclick = () => { mapDayFilter = f; renderMapMarkers(); renderMapTable(); updateMapFilterButtons(); };
+    btn.dataset.filter = f;
+    toolbar.appendChild(btn);
+  });
+  el.appendChild(toolbar);
+
+  const intro = document.createElement('div');
+  intro.className = 'map-intro';
+
+  const mapDiv = document.createElement('div');
+  mapDiv.id = 'map-container';
+  el.appendChild(mapDiv);
+
+  const tableWrap = document.createElement('div');
+  tableWrap.className = 'map-table-wrap';
+  tableWrap.id = 'map-table-wrap';
+  el.appendChild(tableWrap);
+  // Le conteneur n'est pas encore dans le DOM global ici : on lui passe donc directement la cible.
+  renderMapTable(tableWrap);
+
+  // Le rendu Leaflet doit se faire une fois le div inséré dans le DOM.
+  setTimeout(initMap, 0);
+
+  return el;
+}
+function renderMapTable(targetWrap) {
+  const wrap = targetWrap || document.getElementById('map-table-wrap');
+  if (!wrap) return;
+
+  const points = mapDayFilter === 'tous' ? DATA.all_sites : DATA.by_day[mapDayFilter];
+  const title = mapDayFilter === 'tous' ? 'Toutes les collectes' : `Collectes du ${mapDayFilter}`;
+
+  wrap.innerHTML = `
+    <div class="map-table-heading">
+      <span class="map-table-title">${title}</span>
+      <span class="map-table-count">${points.length} point${points.length > 1 ? 's' : ''}</span>
+    </div>
+    <table class="map-table">
+      <thead>
+        <tr>
+          <th>N°</th>
+          <th>Commune</th>
+          <th>Lieu de collecte</th>
+          <th>Navette</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${points.map(p => {
+          const number = DATA.all_sites.findIndex(s => s.commune === p.commune && s.site === p.site) + 1;
+          const navette = mapDayFilter === 'tous'
+            ? p.jours_navette.map(jn => `${jn.jours.join('/')} : ${jn.navette || '—'}`).join(' · ')
+            : (p.navette || '—');
+          return `
+            <tr>
+              <td class="num">${number}</td>
+              <td class="commune">${p.commune}</td>
+              <td class="site">${p.site}</td>
+              <td class="navette">${navette}</td>
+            </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+function updateMapFilterButtons() {
+  document.querySelectorAll('.map-filter').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === mapDayFilter);
+  });
+}
+
+function initMap() {
+  if (mapInstance) { mapInstance.remove(); mapInstance = null; }
+  mapInstance = L.map('map-container', { scrollWheelZoom: true }).setView([44.15, 4.98], 10);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 18
+  }).addTo(mapInstance);
+  renderMapMarkers();
+}
+
+function renderMapMarkers() {
+  if (!mapInstance) return;
+  mapMarkers.forEach(m => mapInstance.removeLayer(m));
+  mapMarkers = [];
+
+  const points = mapDayFilter === 'tous' ? DATA.all_sites : DATA.by_day[mapDayFilter];
+  const bounds = [];
+
+  points.forEach(p => {
+    if (p.lat == null || p.lng == null) return;
+
+    // Le numéro est calculé à partir de DATA.all_sites : aucune numérotation
+    // à maintenir manuellement lorsque vous ajoutez/supprimez un point.
+    const pointNumber = DATA.all_sites.findIndex(s =>
+      s.commune === p.commune && s.site === p.site
+    ) + 1;
+
+    const markerIcon = L.divIcon({
+      className: '',
+      html: `<div class="map-number">${pointNumber}</div>`,
+      iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -16]
+    });
+
+    const marker = L.marker([p.lat, p.lng], { icon: markerIcon }).addTo(mapInstance);
+    const jourInfo = mapDayFilter === 'tous'
+      ? p.jours_navette.map(jn => jn.jours.join('/') + ' ' + (jn.navette || '')).join(' · ')
+      : (p.navette || '');
+    marker.bindPopup(
+      '<div class="popup-commune">' + p.commune + '</div>' +
+      '<div class="popup-site">' + p.site + '</div>' +
+      '<div class="popup-meta"><span class="label">Navette</span> ' + jourInfo + '</div>' +
+      '<div class="popup-meta">' + (p.adresse || '') + '</div>'
+    );
+    mapMarkers.push(marker);
+    bounds.push([p.lat, p.lng]);
+  });
+
+  if (bounds.length) {
+    mapInstance.invalidateSize();
+    mapInstance.fitBounds(bounds, { padding: [30, 30], maxZoom: 13 });
+  }
+}
+
+/* ---------------- Rendu principal ---------------- */
+function render() {
+  renderTabs();
+  const helper = document.getElementById('helperText');
+  helper.style.display = current === 'carte' ? 'none' : 'block';
+
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+  if (current === 'carte') {
+    content.appendChild(renderMapView());
+  } else if (current === 'tous') {
+    content.appendChild(renderAllView());
+  } else {
+    content.appendChild(renderDayView(current));
+  }
+}
+
+render();
+</script>
+</body>
+</html>
