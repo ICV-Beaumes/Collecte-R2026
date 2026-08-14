@@ -14,6 +14,13 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 
+<!--  
+  Version 1 release : 2024-08-14 
+  - Ajout des liens sur les logos en haut de page
+  - Ajout du N° de téléphone de l'ICV en bas de page
+-->
+
+
 <style>
   /* ============================================================
      PALETTE / DESIGN TOKENS — modifier ici pour changer les couleurs
@@ -48,16 +55,40 @@
 
   .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 80px; }
 
-  .header-logo {
-  position: Relative;
-  top: 0px;
-  left: 0px;
-  height: 70px;
-  width: auto;
-}
+  /* ---------- LOGOS EN-TÊTE ---------- */
+  .header-logos {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    width: 100%;
+    margin: 0 auto 22px;
+  }
+
+  .header-logos a {
+    display: block;
+    line-height: 0;
+    flex: 0 0 auto;
+  }
+
+  .header-logos img {
+    display: block;
+    height: auto;
+    max-width: 100%;
+    object-fit: contain;
+  }
+
+  .header-logos .logo-icv {
+    width: 125px;
+  }
+
+  .header-logos .logo-oenobox {
+    width: 200px;
+  }
 
   /* ---------- EN-TÊTE ---------- */
-  header.top { padding: 56px 24px 40px; text-align: center; position: relative; }
+  header.top { padding: 42px 24px 40px; text-align: center; position: relative; }
   .eyebrow {
     font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; letter-spacing: 0.14em;
     text-transform: uppercase; color: var(--wine); font-weight: 600; margin-bottom: 14px;
@@ -69,6 +100,7 @@
   h1 em { color: var(--wine); font-style: italic; font-weight: 500; }
   .sub { font-size: 16px; color: var(--ink-soft); max-width: 560px; margin: 0 auto; line-height: 1.55; }
   .vine-rule { width: 72px; height: 3px; margin: 22px auto 0; background: linear-gradient(90deg, var(--gold), var(--wine)); border-radius: 3px; }
+  .notice-saturday { margin: 10px 0 0; color: red; font-size: 14px; }
 
   /* ---------- ONGLETS (jours + carte) ---------- */
   .day-tabs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 40px 0 8px; }
@@ -198,6 +230,42 @@
   }
 
   @media (max-width: 560px) {
+    /* En-tête mobile : les logos restent toujours dans la largeur de l'écran */
+    header.top {
+      padding: 28px 12px 32px;
+    }
+
+    .header-logos {
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .header-logos .logo-icv {
+      width: 100px;
+    }
+
+    .header-logos .logo-oenobox {
+      width: 160px;
+    }
+
+    h1 {
+      font-size: clamp(30px, 9vw, 42px);
+    }
+
+    .sub {
+      font-size: 15px;
+    }
+
+    .day-tabs {
+      margin-top: 28px;
+      gap: 6px;
+    }
+
+    .day-tab {
+      font-size: 12px;
+      padding: 9px 13px;
+    }
+
     .timeline::before { left: 52px; }
     .stop { grid-template-columns: 52px 1fr; gap: 14px; }
     .stop-time { font-size: 12px; }
@@ -214,12 +282,19 @@
 <body>
 <div class="wrap">
   <header class="top">
-  <img src="Logo.jpg" alt="Logo Groupe ICV" class="header-logo">
+    <div class="header-logos">
+      <a href="https://www.icv.fr" target="_blank" rel="noopener noreferrer" aria-label="Groupe ICV">
+        <img class="logo-icv" src="Logo.jpg" alt="Logo Groupe ICV">
+      </a>
+      <a href="https://oenobox.icv.fr/login" target="_blank" rel="noopener noreferrer" aria-label="Oenobox">
+        <img class="logo-oenobox" src="oenobox.png" alt="Oenobox">
+      </a>
+    </div>
     <h2><em>ICV Rhône Sud</em></h2>
     <h1>Points de collecte<br>Vendanges 2026</h1>
     <p class="sub"> à partir du lundi 17 août 2026.</p>
     <div class="vine-rule"></div>
-    <br><span style="color: red;">1er Samedi = 22 Août 2026</span></br>
+    <p class="notice-saturday">1er Samedi = 22 Août 2026</p>
   </header>
 
   <nav class="day-tabs" id="dayTabs"></nav>
@@ -227,7 +302,7 @@
 
   <div id="content"></div>
 
-  <footer>ICV Rhône Sud · Vendanges 2026</footer>
+  <footer>ICV Rhône Sud · Vendanges 2026 · Accueil <a href="tel:+33490124260">04 90 12 42 60</a></footer>
 </div>
 
 <script>
@@ -694,16 +769,6 @@ const DATA = {
         "lng": 5.2266
       },
       {
-        "commune": "Bedoin",
-        "site": "Terre de Ghaya",
-        "horaires": "9h-12h 15h-18h",
-        "navette": "8h45",
-        "lieu_depot": "Caisse sous le auvent à l'entrée du caveau",
-        "adresse": "2203 route de Carpentras ",
-        "lat": 44.1052,
-        "lng": 5.1713
-      },
-      {
         "commune": "Pont-Saint-Esprit",
         "site": "Clos des Mirans",
         "horaires": "8h-12h 14h-17h",
@@ -712,6 +777,16 @@ const DATA = {
         "adresse": "chemin de Mas Conil",
         "lat": 44.2483,
         "lng": 4.6268
+      },
+      {
+        "commune": "Bedoin",
+        "site": "Terre de Ghaya",
+        "horaires": "9h-12h 15h-18h",
+        "navette": "8h45",
+        "lieu_depot": "Caisse sous le auvent à l'entrée du caveau",
+        "adresse": "2203 route de Carpentras ",
+        "lat": 44.1052,
+        "lng": 5.1713
       },
       {
         "commune": "Saint-Nazaire",
@@ -836,16 +911,6 @@ const DATA = {
         "lng": 5.0333
       },
       {
-        "commune": "Valréas",
-        "site": "Bulles création",
-        "horaires": "8h30-12h 13h30-17h",
-        "navette": "9h00",
-        "lieu_depot": "Caisse à l'intérieur de l'entrepôt qui se trouve à gauche de l'accueil",
-        "adresse": "47 route du lac",
-        "lat": 44.3912,
-        "lng": 4.9993
-      },
-      {
         "commune": "Cairanne",
         "site": "Cave de Camille & Cécilia",
         "horaires": "8h-12h 14h-17h",
@@ -876,34 +941,14 @@ const DATA = {
         "lng": 4.9964
       },
       {
-        "commune": "Suze la Rousse",
-        "site": "Domaine le Plan-Vermeersch",
-        "horaires": "9h-12h 14h-17h",
-        "navette": "10h15",
-        "lieu_depot": "Caisse sous le hangar couvert (parking) derrière la cuve n°34 au fond contre le mur à côté du robinet d'eau. Sonnez si portail d'entrée fermé.",
-        "adresse": "100 chemin du grand bois",
-        "lat": 44.2771,
-        "lng": 4.8874
-      },
-      {
-        "commune": "Suze la Rousse",
-        "site": "Domaine la Bastide",
-        "horaires": "9h-12h 14h-17h",
-        "navette": "10h25",
-        "lieu_depot": "Portail en face de l'entrée du domaine\néchantillons à déposer devant le quai de réception\n",
-        "adresse": "266 Rue de la glacière",
-        "lat": 44.2895,
-        "lng": 4.8429
-      },
-      {
-        "commune": "Rochegude",
-        "site": "Domaine le Gourget",
-        "horaires": "9h-12h 14h-17h",
-        "navette": "10h40",
-        "lieu_depot": "Caisse dans le garage à gauche du quai de réception",
-        "adresse": "176 chemin le Gourget",
-        "lat": 44.2626,
-        "lng": 4.817
+        "commune": "Valréas",
+        "site": "Bulles création",
+        "horaires": "8h30-12h 13h30-17h",
+        "navette": "10h55",
+        "lieu_depot": "Caisse à l'intérieur de l'entrepôt qui se trouve à gauche de l'accueil",
+        "adresse": "47 route du lac",
+        "lat": 44.3912,
+        "lng": 4.9993
       },
       {
         "commune": "Bonnieux",
@@ -946,6 +991,16 @@ const DATA = {
         "lng": 5.1456
       },
       {
+        "commune": "Suze la Rousse",
+        "site": "Domaine le Plan-Vermeersch",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "12h10",
+        "lieu_depot": "Caisse sous le hangar couvert (parking) derrière la cuve n°34 au fond contre le mur à côté du robinet d'eau. Sonnez si portail d'entrée fermé.",
+        "adresse": "100 chemin du grand bois",
+        "lat": 44.2771,
+        "lng": 4.8874
+      },
+      {
         "commune": "Morières les Avignon",
         "site": "Terres d'Avignon - Demazet",
         "horaires": "9h-12h 14h-17h",
@@ -954,6 +1009,26 @@ const DATA = {
         "adresse": "457 avenue Aristide Briand",
         "lat": 43.9392,
         "lng": 4.909
+      },
+      {
+        "commune": "Suze la Rousse",
+        "site": "Domaine la Bastide",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "12h20",
+        "lieu_depot": "Portail en face de l'entrée du domaine\néchantillons à déposer devant le quai de réception\n",
+        "adresse": "266 Rue de la glacière",
+        "lat": 44.2895,
+        "lng": 4.8429
+      },
+      {
+        "commune": "Rochegude",
+        "site": "Domaine le Gourget",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "12h35",
+        "lieu_depot": "Caisse dans le garage à gauche du quai de réception",
+        "adresse": "176 chemin le Gourget",
+        "lat": 44.2626,
+        "lng": 4.817
       },
       {
         "commune": "Bedoin",
@@ -987,36 +1062,6 @@ const DATA = {
       }
     ],
     "samedi": [
-      {
-        "commune": "Saint-Nazaire",
-        "site": "Domaine Les Deux Cols",
-        "horaires": "9h-12h 14h-17h",
-        "navette": "12h15",
-        "lieu_depot": "Informations à venir",
-        "adresse": "62 Chemin du Bresquet",
-        "lat": 44.1974,
-        "lng": 4.6272
-      },
-      {
-        "commune": "Mazan",
-        "site": "Les Vignerons de Saint Marc Canteperdrix",
-        "horaires": "8h-12h 14h-17h",
-        "navette": "9h35",
-        "lieu_depot": "1er portail, côté route de Caromb à droite de la citerne antargaz qui se trouve dehors. Caisse devant la cuve n°48. Si porte garage beige fermée, entrer par les bureaux puisà gauche après porte vitrée chai",
-        "adresse": "890 La Venue de Caromb",
-        "lat": 44.0662,
-        "lng": 5.1285
-      },
-      {
-        "commune": "Châteauneuf du Pape",
-        "site": "Le Clos du Caillou",
-        "horaires": "9h-12h 14h-17h",
-        "navette": "10h40",
-        "lieu_depot": "Caisse dans le labo de la cave",
-        "adresse": "1600 chemin de Saint Dominique",
-        "lat": 44.0841,
-        "lng": 4.8568
-      },
       {
         "commune": "Bonnieux",
         "site": "Cave Coopérative",
@@ -1056,6 +1101,36 @@ const DATA = {
         "adresse": "325 route des caves",
         "lat": 43.8666,
         "lng": 5.1456
+      },
+      {
+        "commune": "Mazan",
+        "site": "Les Vignerons de Saint Marc Canteperdrix",
+        "horaires": "8h-12h 14h-17h",
+        "navette": "9h35",
+        "lieu_depot": "1er portail, côté route de Caromb à droite de la citerne antargaz qui se trouve dehors. Caisse devant la cuve n°48. Si porte garage beige fermée, entrer par les bureaux puisà gauche après porte vitrée chai",
+        "adresse": "890 La Venue de Caromb",
+        "lat": 44.0662,
+        "lng": 5.1285
+      },
+      {
+        "commune": "Châteauneuf du Pape",
+        "site": "Le Clos du Caillou",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "10h40",
+        "lieu_depot": "Caisse dans le labo de la cave",
+        "adresse": "1600 chemin de Saint Dominique",
+        "lat": 44.0841,
+        "lng": 4.8568
+      },
+      {
+        "commune": "Saint-Nazaire",
+        "site": "Domaine Les Deux Cols",
+        "horaires": "9h-12h 14h-17h",
+        "navette": "12h15",
+        "lieu_depot": "Informations à venir",
+        "adresse": "62 Chemin du Bresquet",
+        "lat": 44.1974,
+        "lng": 4.6272
       }
     ]
   },
@@ -1204,8 +1279,7 @@ const DATA = {
         {
           "jours": [
             "lundi",
-            "mercredi",
-            "vendredi"
+            "mercredi"
           ],
           "navette": "10h25"
         },
@@ -1215,7 +1289,13 @@ const DATA = {
             "jeudi"
           ],
           "navette": "12h25"
-        }
+        },
+        {
+          "jours": [
+            "vendredi"
+          ],
+          "navette": "12h20"
+        },
       ],
       "lat": 44.2895,
       "lng": 4.8429
@@ -1287,10 +1367,15 @@ const DATA = {
         {
           "jours": [
             "lundi",
-            "mercredi",
-            "vendredi"
+            "mercredi"
           ],
           "navette": "10h40"
+        },
+        {
+          "jours": [
+            "vendredi"
+          ],
+          "navette": "12h35"
         }
       ],
       "lat": 44.2626,
@@ -1310,6 +1395,12 @@ const DATA = {
             "vendredi"
           ],
           "navette": "10h15"
+        },
+        {
+          "jours": [
+           "vendredi"
+          ],
+          "navette": "12h10"
         }
       ],
       "lat": 44.2771,
@@ -1344,10 +1435,15 @@ const DATA = {
         {
           "jours": [
             "lundi",
-            "mercredi",
-            "vendredi"
+            "mercredi"
           ],
           "navette": "9h00"
+        },
+        {
+          "jours": [
+            "vendredi"
+          ],
+          "navette": "10h55"
         }
       ],
       "lat": 44.3912,
