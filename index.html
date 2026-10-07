@@ -15,11 +15,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 
 <!--  
-  Version 001 : 2024-08-18 
+  Version 001 : 2026-08-18 
   - Modification sur des erreurs horaires collectes
 
-  Version 002 : 2024-08-19
+  Version 002 : 2026-08-19
   - Modification horaire Grapillon d'Or
+
+  Version 003 : 2026-10-07
+  -Modification du rythme de tournée de 6 à 5 jours
 -->
 
 
@@ -294,9 +297,9 @@
     </div>
     <h2><em>ICV Rhône Sud</em></h2>
     <h1>Points de collecte<br>Vendanges 2026</h1>
-    <p class="sub"> à partir du lundi 17 août 2026.</p>
+    <p class="sub"></p>
     <div class="vine-rule"></div>
-    <p class="notice-saturday">1er Samedi = 22 Août 2026</p>
+    <p class="notice-saturday">Arrêt des collectes du samedi</p>
   </header>
 
   <nav class="day-tabs" id="dayTabs"></nav>
@@ -1062,78 +1065,6 @@ const DATA = {
         "lat": 44.0662,
         "lng": 5.1285
       }
-    ],
-    "samedi": [
-      {
-        "commune": "Bonnieux",
-        "site": "Cave Coopérative",
-        "horaires": "8h-12h 14h-17h",
-        "navette": "8h15",
-        "lieu_depot": "Accès petite porte verte à côté du mur en carreaux de verre. Caisse à gauche devant cuve inox avec pieds bleus ",
-        "adresse": "Place de la gare",
-        "lat": 43.8538,
-        "lng": 5.2762
-      },
-      {
-        "commune": "Bonnieux",
-        "site": "CAPL",
-        "horaires": "8h-12h 14h-17h",
-        "navette": "8h20",
-        "lieu_depot": "Hangar CAPL - Caisse au fond de l'entrepôt à gauche du bureau",
-        "adresse": "Place de la gare",
-        "lat": 43.8535,
-        "lng": 5.2768
-      },
-      {
-        "commune": "Goult",
-        "site": "Cave de Lumière",
-        "horaires": "8h-12h 14h-17h",
-        "navette": "8h25",
-        "lieu_depot": "Parking du haut accès par route de Joucas. Petite porte vitrée entre les 2 portails beiges. Caisse à droite à l'intérieur ",
-        "adresse": "19 route de Joucas",
-        "lat": 43.8606,
-        "lng": 5.233
-      },
-      {
-        "commune": "Maubec",
-        "site": "Coop d'Approvisionnement de Coustellet",
-        "horaires": "8h-12h 14h-17h",
-        "navette": "8h40",
-        "lieu_depot": "Casier en extérieur sous l'abri",
-        "adresse": "325 route des caves",
-        "lat": 43.8666,
-        "lng": 5.1456
-      },
-      {
-        "commune": "Mazan",
-        "site": "Les Vignerons de Saint Marc Canteperdrix",
-        "horaires": "8h-12h 14h-17h",
-        "navette": "9h35",
-        "lieu_depot": "1er portail, côté route de Caromb à droite de la citerne antargaz qui se trouve dehors. Caisse devant la cuve n°48. Si porte garage beige fermée, entrer par les bureaux puisà gauche après porte vitrée chai",
-        "adresse": "890 La Venue de Caromb",
-        "lat": 44.0662,
-        "lng": 5.1285
-      },
-      {
-        "commune": "Châteauneuf du Pape",
-        "site": "Le Clos du Caillou",
-        "horaires": "9h-12h 14h-17h",
-        "navette": "10h40",
-        "lieu_depot": "Caisse dans le labo de la cave",
-        "adresse": "1600 chemin de Saint Dominique",
-        "lat": 44.0841,
-        "lng": 4.8568
-      },
-      {
-        "commune": "Saint-Nazaire",
-        "site": "Domaine Les Deux Cols",
-        "horaires": "9h-12h 14h-17h",
-        "navette": "12h15",
-        "lieu_depot": "Informations à venir",
-        "adresse": "62 Chemin du Bresquet",
-        "lat": 44.1974,
-        "lng": 4.6272
-      }
     ]
   },
   "all_sites": [
@@ -1153,12 +1084,6 @@ const DATA = {
             "vendredi"
           ],
           "navette": "11h20"
-        },
-        {
-          "jours": [
-             "samedi"
-          ],
-          "navette": "8h15"
         }
       ],
       "lat": 43.8538,
@@ -1180,12 +1105,6 @@ const DATA = {
             "vendredi"
           ],
           "navette": "11h25"
-        },
-        {
-          "jours": [
-             "samedi"
-          ],
-          "navette": "8h20"
         }
       ],
       "lat": 43.8535,
@@ -1207,12 +1126,6 @@ const DATA = {
             "vendredi"
           ],
           "navette": "11h30"
-        },
-        {
-          "jours": [
-             "samedi"
-          ],
-          "navette": "8h25"
         }
       ],
       "lat": 43.8606,
@@ -1234,12 +1147,6 @@ const DATA = {
             "vendredi"
           ],
           "navette": "11h45"
-        },
-        {
-          "jours": [
-            "samedi"
-          ],
-          "navette": "8h40"
         }
       ],
       "lat": 43.8666,
@@ -1496,12 +1403,6 @@ const DATA = {
             "jeudi"
           ],
           "navette": "10h05"
-        },
-        {
-          "jours": [
-             "samedi"
-          ],
-          "navette": "10h40"
         }
       ],
       "lat": 44.0841,
@@ -1520,12 +1421,6 @@ const DATA = {
             "jeudi"
           ],
           "navette": "8h45"
-        },
-        {
-          "jours": [
-             "samedi"
-          ],
-          "navette": "12h15"
         }
       ],
       "lat": 44.1974,
@@ -1627,7 +1522,7 @@ const DATA = {
   ]
 };
 
-const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi'];
 let current = 'carte'; // vue affichée au chargement : 'carte' | 'tous' | 'lundi'...
 let mapInstance = null;
 let mapMarkers = [];
